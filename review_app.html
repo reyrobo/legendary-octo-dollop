@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Truview - Product Review App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f3f3f3;
+    }
+    header {
+      background-color: #6200ea;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 3rem;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      background-color: #3700b3;
+      padding: 15px 0;
+    }
+    nav button {
+      margin: 0 15px;
+      padding: 15px 25px;
+      font-size: 1.2rem;
+      border: none;
+      background-color: #bb86fc;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    nav button:hover {
+      background-color: #9d65e6;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 30px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    .search-bar {
+      margin-bottom: 30px;
+    }
+    .search-bar input {
+      width: calc(100% - 70px);
+      padding: 15px;
+      margin-right: 5px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1.2rem;
+    }
+    .search-bar button {
+      padding: 15px;
+      font-size: 1.2rem;
+      background-color: #6200ea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    h2 {
+      font-size: 2rem;
+      margin-top: 30px;
+    }
+    .reviews {
+      margin-top: 20px;
+    }
+    .review {
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      background: #fafafa;
+      display: flex;
+      align-items: flex-start;
+    }
+    .review img {
+      max-width: 150px;
+      max-height: 150px;
+      border-radius: 8px;
+      margin-right: 20px;
+    }
+    .review-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .review-header h3 {
+      font-size: 1.5rem;
+      margin: 0;
+    }
+    .review-stars {
+      color: #ffa500;
+      margin-left: 15px;
+      font-size: 1.2rem;
+    }
+    .review-note {
+      font-size: 1.1rem;
+      margin-top: 10px;
+    }
+    .hidden {
+      display: none;
+    }
+    .no-reviews {
+      text-align: center;
+      color: gray;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Truview</h1>
+    <p>Your trusted product review app!</p>
+  </header>
+  <nav>
+    <button onclick="showHomePage()">Home</button>
+    <button onclick="showAddReviewPage()">Add a Review</button>
+  </nav>
+  <div class="container">
+    <div id="homePage">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search reviews...">
+        <button onclick="searchReviews()">Search</button>
+      </div>
+      <h2>Most Popular Reviews</h2>
+      <div id="popularReviews" class="reviews"></div>
+      <h2>All Reviews</h2>
+      <div id="allReviews" class="reviews"></div>
+    </div>
+    <div id="addReviewPage" class="hidden">
+      <h2>Add a Review</h2>
+      <form id="reviewForm">
+        <div class="form-group">
+          <label for="productName">Product Name:</label>
+          <input type="text" id="productName" required>
+        </div>
+        <div class="form-group">
+          <label for="reviewNote">Your Review:</label>
+          <textarea id="reviewNote" rows="4" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="reviewRating">Rating:</label>
+          <select id="reviewRating" required>
+            <option value="">Select a rating</option>
+            <option value="1">1 Star</option>
+            <option value="2">2 Stars</option>
+            <option value="3">3 Stars</option>
+            <option value="4">4 Stars</option>
+            <option value="5">5 Stars</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="reviewImage">Image (URL):</label>
+          <input type="url" id="reviewImage">
+        </div>
+        <button type="submit">Submit Review</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const reviewForm = document.getElementById('reviewForm');
+    const homePage = document.getElementById('homePage');
+    const addReviewPage = document.getElementById('addReviewPage');
+    const allReviewsContainer = document.getElementById('allReviews');
+    const popularReviewsContainer = document.getElementById('popularReviews');
+
+    // Load reviews
+    const loadReviews = () => {
+      const reviews = JSON.parse(localStorage.getItem('reviews')) || [];
+      renderReviews(reviews, allReviewsContainer, "No reviews found.");
+      renderReviews(getPopularReviews(reviews), popularReviewsContainer, "No popular reviews found.");
+    };
+
+    // Get popular reviews
+    const getPopularReviews = (reviews) => {
+      return reviews.sort((a, b) => b.rating - a.rating).slice(0, 3);
+    };
+
+    // Render reviews
+    const renderReviews = (reviews, container, noReviewsMessage) => {
+      container.innerHTML = '';
+      if (reviews.length === 0) {
+        container.innerHTML = `<p class="no-reviews">${noReviewsMessage}</p>`;
+        return;
+      }
+      reviews.forEach(review => addReviewToDOM(review, container));
+    };
+
+    // Add review to DOM
+    const addReviewToDOM = (review, container) => {
+      const reviewDiv = document.createElement('div');
+      reviewDiv.className = 'review';
+      reviewDiv.innerHTML = `
+        ${review.image ? `<img src="${review.image}" alt="Product Image">` : ''}
+        <div>
+          <div class="review-header">
+            <h3>${review.productName}</h3>
+            <div class="review-stars">${'★'.repeat(review.rating)}</div>
+          </div>
+          <div class="review-note">${review.note}</div>
+        </div>
+      `;
+      container.appendChild(reviewDiv);
+    };
+
+    // Form submission
+    reviewForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const productName = document.getElementById('productName').value;
+      const reviewNote = document.getElementById('reviewNote').value;
+      const reviewRating = parseInt(document.getElementById('reviewRating').value);
+      const reviewImage = document.getElementById('reviewImage').value;
+
+      const newReview = { productName, note: reviewNote, rating: reviewRating, image: reviewImage };
+      const reviews = JSON.parse(localStorage.getItem('reviews')) || [];
+      reviews.push(newReview);
+      localStorage.setItem('reviews', JSON.stringify(reviews));
+
+      loadReviews();
+      showHomePage();
+      reviewForm.reset();
+    });
+
+    // Search reviews
+    const searchReviews = () => {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const reviews = JSON.parse(localStorage.getItem('reviews')) || [];
+      const filteredReviews = reviews.filter(review =>
+        review.productName.toLowerCase().includes(query) || review.note.toLowerCase().includes(query)
+      );
+      renderReviews(filteredReviews, allReviewsContainer, "No matching reviews found.");
+    };
+
+    // Navigation
+    const showHomePage = () => {
+      homePage.classList.remove('hidden');
+      addReviewPage.classList.add('hidden');
+      loadReviews();
+    };
+
+    const showAddReviewPage = () => {
+      homePage.classList.add('hidden');
+      addReviewPage.classList.remove('hidden');
+    };
+
+    // Initialize
+    loadReviews();
+  </script>
+</body>
+</html>
